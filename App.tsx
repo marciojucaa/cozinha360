@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   OrderStatus, 
@@ -18,7 +17,7 @@ import { ReportsView } from './components/ReportsView';
 import { KitchenView } from './components/KitchenView';
 import { MenuView } from './components/MenuView';
 import { Navigation } from './components/Navigation';
-import { supabase } from './lib/supabase';
+import { supabase, isSupabaseReady } from './lib/supabase';
 
 const Logo: React.FC<{ className?: string }> = ({ className }) => (
   <div className={`relative flex items-center justify-center ${className}`}>
@@ -66,26 +65,23 @@ const App: React.FC = () => {
     const savedUser = localStorage.getItem('cozinha360_user');
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
 
-    fetchInitialData();
+    if (isSupabaseReady) {
+      fetchInitialData();
 
-    // Sincronização Realtime - Tabelas 'orders' e 'products'
-    const channel = supabase
-      .channel('schema-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-        console.log('Realtime Order Update:', payload);
-        fetchOrders();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
-        console.log('Realtime Product Update:', payload);
-        fetchProducts();
-      })
-      .subscribe((status) => {
-        setIsConnected(status === 'SUBSCRIBED');
-      });
+      const channel = supabase
+        .channel('schema-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchOrders())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => fetchProducts())
+        .subscribe((status) => {
+          setIsConnected(status === 'SUBSCRIBED');
+        });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const fetchInitialData = async () => {
@@ -100,20 +96,18 @@ const App: React.FC = () => {
   };
 
   const fetchProducts = async () => {
+    if (!isSupabaseReady) return;
     const { data, error } = await supabase.from('products').select('*').order('name');
     if (!error && data && data.length > 0) {
       setProducts(data as Product[]);
-    } else if (error) {
-      console.error('Erro Supabase Products:', error.message);
     }
   };
 
   const fetchOrders = async () => {
+    if (!isSupabaseReady) return;
     const { data, error } = await supabase.from('orders').select('*');
     if (!error && data) {
       setOrders(data as Order[]);
-    } else if (error) {
-      console.error('Erro Supabase Orders:', error.message);
     }
   };
 
@@ -130,68 +124,49 @@ const App: React.FC = () => {
 
   const updateProducts = async (newProducts: Product[]) => {
     setProducts(newProducts);
+    if (!isSupabaseReady) return;
     for (const p of newProducts) {
-      const { error } = await supabase.from('products').upsert(p);
-      if (error) alert("Erro ao atualizar cardápio no banco: " + error.message);
+      await supabase.from('products').upsert(p);
     }
   };
 
   const saveOrder = async (order: Order) => {
-    const { error } = await supabase.from('orders').upsert({
-      id: order.id,
-      type: order.type,
-      tableId: order.tableId,
-      customer: order.customer,
-      deliveryFee: order.deliveryFee,
-      items: order.items,
-      status: order.status,
-      total: order.total,
-      paymentMethod: order.paymentMethod,
-      isPaid: order.isPaid,
-      createdAt: order.createdAt,
-      closedAt: order.closedAt
-    });
-
+    if (!isSupabaseReady) {
+      alert("Sistema em modo demonstração. Configure o Supabase para salvar pedidos reais.");
+      return;
+    }
+    const { error } = await supabase.from('orders').upsert(order);
     if (error) {
       console.error('Erro ao salvar no Supabase:', error.message);
-      alert('Erro ao salvar pedido: ' + error.message + '\n\nVerifique se o RLS está habilitado com permissão INSERT no Supabase.');
+      alert('Erro ao salvar pedido: ' + error.message);
     } else {
       fetchOrders();
     }
   };
 
   const cancelOrder = async (orderId: string) => {
+    if (!isSupabaseReady) return;
     if (confirm('Deseja excluir este pedido permanentemente?')) {
       const { error } = await supabase.from('orders').delete().eq('id', orderId);
-      if (error) console.error('Erro ao deletar:', error.message);
-      else fetchOrders();
+      if (!error) fetchOrders();
     }
   };
 
   const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', orderId);
-    
-    if (error) console.error('Erro ao atualizar status:', error.message);
-    else fetchOrders();
+    if (!isSupabaseReady) return;
+    const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
+    if (!error) fetchOrders();
   };
 
   const payOrder = async (orderId: string, method: PaymentMethod) => {
+    if (!isSupabaseReady) return;
     const closedAt = Date.now();
     const { error } = await supabase
       .from('orders')
-      .update({ 
-        isPaid: true, 
-        status: OrderStatus.FINISHED, 
-        paymentMethod: method, 
-        closedAt
-      })
+      .update({ isPaid: true, status: OrderStatus.FINISHED, paymentMethod: method, closedAt })
       .eq('id', orderId);
 
-    if (error) console.error('Erro no pagamento:', error.message);
-    else fetchOrders();
+    if (!error) fetchOrders();
   };
 
   const tablesWithStatus = tables.map(t => {
@@ -201,6 +176,28 @@ const App: React.FC = () => {
       status: activeOrder ? TableStatus.OCCUPIED : TableStatus.FREE
     };
   });
+
+  if (!isSupabaseReady && !loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white p-8 text-center">
+        <Logo className="w-40 h-40 mb-8" />
+        <div className="max-w-md space-y-4">
+          <h2 className="text-2xl font-black text-[#8B1D1D] uppercase">Banco de Dados não Detectado</h2>
+          <p className="text-slate-500 text-sm">O erro <b>'Failed to fetch'</b> acontece porque as variáveis de ambiente (SUPABASE_URL e SUPABASE_ANON_KEY) não foram configuradas ou são inválidas.</p>
+          <div className="bg-slate-50 p-4 rounded-2xl text-left text-xs font-mono space-y-2 border border-slate-200">
+            <p className="font-bold text-slate-700">O que fazer agora:</p>
+            <ol className="list-decimal list-inside space-y-1 text-slate-500">
+              <li>Vá ao painel da <b>Vercel</b>.</li>
+              <li>Acesse <b>Settings -> Environment Variables</b>.</li>
+              <li>Adicione <b>SUPABASE_URL</b> e <b>SUPABASE_ANON_KEY</b>.</li>
+              <li>Faça um novo <b>Redeploy</b>.</li>
+            </ol>
+          </div>
+          <button onClick={() => window.location.reload()} className="w-full py-4 bg-[#8B1D1D] text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-red-900/10">Tentar Novamente</button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
