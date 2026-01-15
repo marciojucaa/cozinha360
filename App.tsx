@@ -188,7 +188,7 @@ const App: React.FC = () => {
             <p className="font-bold text-slate-700">O que fazer agora:</p>
             <ol className="list-decimal list-inside space-y-1 text-slate-500">
               <li>Vá ao painel da <b>Vercel</b>.</li>
-              <li>Acesse <b>Settings -> Environment Variables</b>.</li>
+              <li>Acesse <b>Settings &rarr; Environment Variables</b>.</li>
               <li>Adicione <b>SUPABASE_URL</b> e <b>SUPABASE_ANON_KEY</b>.</li>
               <li>Faça um novo <b>Redeploy</b>.</li>
             </ol>
