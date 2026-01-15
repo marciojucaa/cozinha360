@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Order, PaymentMethod, Product, OrderType } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
@@ -226,7 +225,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ orders, products, onUp
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                      <Tooltip formatter={(value: any) => `R$ ${Number(value || 0).toFixed(2)}`} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="flex justify-center gap-4 mt-2">
