@@ -1,0 +1,7 @@
+{
+  "name": "COZINHA360 - Gestão Gastronômica",
+  "description": "Sistema integrado para gestão de restaurantes, pizzarias e hamburguerias com foco em eficiência 360 graus.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
