@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   OrderStatus, 
@@ -66,11 +65,18 @@ const App: React.FC = () => {
   useEffect(() => {
     // Escuta evento de instalação do PWA
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('PWA: Evento beforeinstallprompt capturado');
       e.preventDefault();
       setDeferredPrompt(e);
     };
 
+    const handleAppInstalled = () => {
+      console.log('PWA: Aplicativo instalado com sucesso');
+      setDeferredPrompt(null);
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     const savedUser = localStorage.getItem('cozinha360_user');
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
@@ -89,11 +95,13 @@ const App: React.FC = () => {
       return () => {
         supabase.removeChannel(channel);
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        window.removeEventListener('appinstalled', handleAppInstalled);
       };
     } else {
       setLoading(false);
       return () => {
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        window.removeEventListener('appinstalled', handleAppInstalled);
       }
     }
   }, []);
@@ -102,6 +110,7 @@ const App: React.FC = () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
+    console.log(`PWA: Usuário escolheu ${outcome}`);
     if (outcome === 'accepted') {
       setDeferredPrompt(null);
     }
@@ -286,7 +295,7 @@ const App: React.FC = () => {
           {deferredPrompt && (
             <button 
               onClick={handleInstallClick}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-[#8B1D1D] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#721818] transition-all animate-pulse"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-[#8B1D1D] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#721818] transition-all shadow-lg active:scale-95"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
               Instalar App

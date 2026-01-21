@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-title" content="Cozinha360" />
   <link
     rel="apple-touch-icon"
-    href="https://moehbxectmuisqehlr.supabase.co/storage/v1/object/public/assets/icon-192.png"
+    href="https://moehbxectmgwisqehhlr.supabase.co/storage/v1/object/public/assets/icon-192.png"
   />
 
   <!-- Fonts / UI -->
@@ -34,23 +34,30 @@
     .brand-red { color: #8B1D1D; }
     .bg-brand-red { background-color: #8B1D1D; }
     .hover-bg-brand-red:hover { background-color: #721818; }
-  </style>
-
-  <!-- Import maps (seu setup atual) -->
-  <script type="importmap">
-  {
-    "imports": {
-      "react": "https://esm.sh/react@^19.2.3",
-      "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-      "react/": "https://esm.sh/react@^19.2.3/",
-      "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
-      "recharts": "https://esm.sh/recharts@^3.6.0",
-      "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.91.0",
-      "vite": "https://esm.sh/vite@^7.3.1",
-      "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+    
+    /* Utilitário para esconder scrollbar mantendo funcionalidade */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
     }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.91.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0"
   }
-  </script>
+}
+</script>
 </head>
 
 <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -59,22 +66,19 @@
   <!-- App -->
   <script type="module" src="/index.tsx"></script>
 
-  <!-- Service Worker (REGISTRO CORRETO) -->
+  <!-- Service Worker Registration -->
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((registration) => {
-          console.log("PWA: Service Worker registrado");
-
-          // força controle imediato
-          if (registration.waiting) {
-            registration.waiting.postMessage({ type: "SKIP_WAITING" });
-          }
-        })
-        .catch((error) => {
-          console.error("PWA: erro ao registrar SW", error);
-        });
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((registration) => {
+            console.log("PWA: Service Worker registrado");
+          })
+          .catch((error) => {
+            console.error("PWA: erro ao registrar SW", error);
+          });
+      });
     }
   </script>
 </body>
