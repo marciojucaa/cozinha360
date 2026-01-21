@@ -1,9 +1,10 @@
-const CACHE_NAME = "cozinha360-v9";
+const CACHE_NAME = "cozinha360-v10";
 
 const STATIC_ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
+  "/favicon.ico",
   "/icon-192.png",
   "/icon-512.png"
 ];
