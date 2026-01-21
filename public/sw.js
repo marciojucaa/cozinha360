@@ -1,4 +1,4 @@
-const CACHE_NAME = "cozinha360-v11";
+const CACHE_NAME = "cozinha360-v12";
 
 const STATIC_ASSETS = [
   "/",
@@ -9,40 +9,45 @@ const STATIC_ASSETS = [
   "/icon-512.png"
 ];
 
+// INSTALL
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        STATIC_ASSETS.map(asset => 
-          cache.add(asset).catch(err => console.log(`Falha ao cachear: ${asset}`))
-        )
-      );
-    })
-  );
-});
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(STATIC_ASSETS)
     )
   );
-  self.clients.claim();
 });
 
+// ACTIVATE
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    Promise.all([
+      caches.keys().then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== CACHE_NAME)
+            .map((key) => caches.delete(key))
+        )
+      ),
+      self.clients.claim()
+    ])
+  );
+});
+
+// FETCH — Network First
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        const responseClone = response.clone();
-        if (event.request.url.startsWith('http')) {
+        if (
+          response &&
+          response.status === 200 &&
+          response.type === "basic"
+        ) {
+          const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
           });

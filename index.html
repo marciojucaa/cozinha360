@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#8B1D1D" />
   <meta name="background-color" content="#ffffff" />
 
-  <!-- Favicon / Icons Locais -->
+  <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <link rel="shortcut icon" href="/favicon.ico" />
 
@@ -21,11 +21,13 @@
   <meta name="apple-mobile-web-app-title" content="Cozinha360" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
 
-  <!-- Fonts / UI -->
+  <!-- Fonts -->
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet"
   />
+
+  <!-- Tailwind CDN (ok por enquanto) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
@@ -35,30 +37,32 @@
     .brand-red { color: #8B1D1D; }
     .bg-brand-red { background-color: #8B1D1D; }
     .hover-bg-brand-red:hover { background-color: #721818; }
-    
-    /* Utilitário para esconder scrollbar mantendo funcionalidade */
+
+    /* Esconder scrollbar sem quebrar scroll */
     .scrollbar-hide::-webkit-scrollbar {
-        display: none;
+      display: none;
     }
     .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
-    "recharts": "https://esm.sh/recharts@^3.6.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.91.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+
+  <!-- Import Maps -->
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@^19.2.3",
+      "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+      "react/": "https://esm.sh/react@^19.2.3/",
+      "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+      "recharts": "https://esm.sh/recharts@^3.6.0",
+      "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.91.0",
+      "vite": "https://esm.sh/vite@^7.3.1",
+      "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+    }
   }
-}
-</script>
+  </script>
 </head>
 
 <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -67,18 +71,23 @@
   <!-- App -->
   <script type="module" src="/index.tsx"></script>
 
-  <!-- Service Worker Registration -->
+  <!-- Service Worker -->
   <script>
     if ("serviceWorker" in navigator) {
-      window.addEventListener('load', () => {
+      window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("/sw.js")
-          .then((registration) => {
+          .then(() => {
             console.log("PWA: Service Worker registrado");
           })
-          .catch((error) => {
-            console.error("PWA: erro ao registrar SW", error);
+          .catch((err) => {
+            console.error("PWA: erro ao registrar SW", err);
           });
+      });
+
+      // Garante que o SW controle a página (CRÍTICO para instalar)
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        window.location.reload();
       });
     }
   </script>
