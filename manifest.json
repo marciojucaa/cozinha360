@@ -1,8 +1,11 @@
 {
+  "id": "/",
   "name": "COZINHA360 Gestão",
   "short_name": "Cozinha360",
   "description": "Sistema de gestão gastronômica integrado.",
-  "start_url": "/",
+  "lang": "pt-BR",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#8B1D1D",
