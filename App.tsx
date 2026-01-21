@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   OrderStatus, 
@@ -60,8 +61,17 @@ const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
+    // Escuta evento de instalação do PWA
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
     const savedUser = localStorage.getItem('cozinha360_user');
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
 
@@ -78,11 +88,24 @@ const App: React.FC = () => {
 
       return () => {
         supabase.removeChannel(channel);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       };
     } else {
       setLoading(false);
+      return () => {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      }
     }
   }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -259,10 +282,44 @@ const App: React.FC = () => {
             <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{currentUser.role === 'admin' ? 'Painel Gestor' : currentUser.name}</span>
           </div>
         </div>
-        <button onClick={logout} className="p-2.5 text-slate-300 hover:text-red-600 transition-all bg-slate-50 hover:bg-red-50 rounded-xl">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-        </button>
+        <div className="flex items-center gap-2">
+          {deferredPrompt && (
+            <button 
+              onClick={handleInstallClick}
+              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-[#8B1D1D] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#721818] transition-all animate-pulse"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              Instalar App
+            </button>
+          )}
+          <button onClick={logout} className="p-2.5 text-slate-300 hover:text-red-600 transition-all bg-slate-50 hover:bg-red-50 rounded-xl">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+          </button>
+        </div>
       </header>
+
+      {/* Floating Install Prompt for Mobile */}
+      {deferredPrompt && (
+        <div className="fixed bottom-24 left-4 right-4 z-50 md:hidden animate-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-[#8B1D1D] text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between border border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="bg-white p-2 rounded-lg">
+                <Logo className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-tight">Experiência Completa</p>
+                <p className="text-[10px] text-white/70">Instale o Cozinha360 no seu celular</p>
+              </div>
+            </div>
+            <button 
+              onClick={handleInstallClick}
+              className="px-4 py-2 bg-white text-[#8B1D1D] rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg"
+            >
+              Instalar
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1 overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-7xl mx-auto p-4 md:p-8">
