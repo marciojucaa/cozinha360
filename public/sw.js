@@ -1,18 +1,17 @@
-const CACHE_NAME = "cozinha360-v5";
+const CACHE_NAME = "cozinha360-v6";
 
 const STATIC_ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png"
+  "/icon-192.png",
+  "/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Adiciona um por um para não falhar tudo se um ícone estiver faltando
       return Promise.allSettled(
         STATIC_ASSETS.map(asset => 
           cache.add(asset).catch(err => console.log(`Falha ao cachear: ${asset}`))
