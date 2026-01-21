@@ -1,4 +1,4 @@
-const CACHE_NAME = "cozinha360-v10";
+const CACHE_NAME = "cozinha360-v11";
 
 const STATIC_ASSETS = [
   "/",
