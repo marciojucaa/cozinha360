@@ -1,9 +1,12 @@
-const CACHE_NAME = "cozinha360-v3";
+
+const CACHE_NAME = "cozinha360-v4";
 
 const STATIC_ASSETS = [
   "/",
   "/index.html",
-  "/manifest.json"
+  "/manifest.json",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png"
 ];
 
 // INSTALL — instala e ativa imediatamente
@@ -11,7 +14,10 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      // Tenta adicionar os assets, mas não quebra se um falhar individualmente
+      return Promise.allSettled(
+        STATIC_ASSETS.map(asset => cache.add(asset))
+      );
     })
   );
 });
