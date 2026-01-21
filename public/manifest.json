@@ -2,6 +2,7 @@
   "name": "COZINHA360 Gestão",
   "short_name": "Cozinha360",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#8B1D1D",
